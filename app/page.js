@@ -7,6 +7,7 @@ export default function SweetCornerChat() {
   const [inputVal, setInputVal] = useState("");
   const [chatList, setChatList] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const bottomAnchor = useRef(null);
 
@@ -18,6 +19,27 @@ export default function SweetCornerChat() {
     "💰 Sweets under 300"
   ];
 
+  // 1. Load saved conversation from sessionStorage on page load
+  useEffect(() => {
+    try {
+      const savedHistory = sessionStorage.getItem("sweet_corner_chat");
+      if (savedHistory) {
+        setChatList(JSON.parse(savedHistory));
+      }
+    } catch (err) {
+      console.error("Failed to load chat history:", err);
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // 2. Persist conversation whenever chatList changes
+  useEffect(() => {
+    if (isHydrated) {
+      sessionStorage.setItem("sweet_corner_chat", JSON.stringify(chatList));
+    }
+  }, [chatList, isHydrated]);
+
+  // 3. Auto-scroll to bottom
   useEffect(() => {
     bottomAnchor.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatList, isProcessing]);
@@ -73,6 +95,8 @@ export default function SweetCornerChat() {
     } catch (e) {
       console.error(e);
     }
+    // Clear browser memory storage
+    sessionStorage.removeItem("sweet_corner_chat");
     setChatList([]);
   }
 
@@ -125,7 +149,7 @@ export default function SweetCornerChat() {
                     <Link
                       key={idx}
                       href={`/product/${p.product_id || idx + 1}`}
-                      className="group bg-amber-50/50 hover:bg-amber-100/60 border border-amber-200 hover:border-amber-400 rounded-lg overflow-hidden flex flex-col justify-between shadow-xs transition transform hover:-translate-y-0.5 cursor-pointer text-left"
+                      className="group bg-amber-50/50 hover:bg-amber-100/60 border border-amber-200 hover:border-amber-400 rounded-lg overflow-hidden flex flex-col justify-between shadow-xs transition transform hover:-translate-y-0.5 cursor-pointer"
                     >
                       <img
                         src={p.image_url}
