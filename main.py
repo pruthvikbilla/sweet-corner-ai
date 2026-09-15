@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agent import process_query
 from memory import wipe_history
+from tools import get_product_by_id
 
 app = FastAPI(title="Sweet Corner API")
 
@@ -33,6 +34,13 @@ def handle_chat(payload: ChatPayload):
 
     result = process_query(user_input)
     return result
+
+@app.get("/api/products/{product_id}")
+def fetch_product(product_id: int):
+    product = get_product_by_id(product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
 
 @app.post("/api/reset")
 def reset_session():

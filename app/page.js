@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 
 export default function SweetCornerChat() {
   const [inputVal, setInputVal] = useState("");
@@ -121,14 +122,15 @@ export default function SweetCornerChat() {
               {item.products && item.products.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                   {item.products.map((p, idx) => (
-                    <div
+                    <Link
                       key={idx}
-                      className="bg-amber-50/50 border border-amber-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-xs"
+                      href={`/product/${p.product_id || idx + 1}`}
+                      className="group bg-amber-50/50 hover:bg-amber-100/60 border border-amber-200 hover:border-amber-400 rounded-lg overflow-hidden flex flex-col justify-between shadow-xs transition transform hover:-translate-y-0.5 cursor-pointer text-left"
                     >
                       <img
                         src={p.image_url}
                         alt={p.product_name}
-                        className="w-full h-24 object-cover"
+                        className="w-full h-24 object-cover group-hover:scale-105 transition duration-300"
                         onError={(e) => {
                           e.currentTarget.src =
                             "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=300&q=80";
@@ -136,7 +138,7 @@ export default function SweetCornerChat() {
                       />
                       <div className="p-2 flex flex-col flex-1 justify-between">
                         <div>
-                          <div className="font-semibold text-xs text-amber-950 truncate">
+                          <div className="font-semibold text-xs text-amber-950 group-hover:text-amber-800 truncate">
                             {p.product_name}
                           </div>
                           <div className="text-[10px] text-slate-600 line-clamp-2 mt-0.5">
@@ -148,7 +150,7 @@ export default function SweetCornerChat() {
                           <span className="text-[10px] text-slate-500 font-normal">{p.weight}</span>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}

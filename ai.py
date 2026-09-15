@@ -36,34 +36,27 @@ def evaluate_user_intent(user_msg):
     return content
 
 def compose_final_reply(query, product_data):
-    # Case 1: If database products were found, format them cleanly
     if product_data:
-        items_summary = "\n\n".join([
-            f"• Product Name: {p['product_name']}\n  Category: {p['category']}\n  Price: ₹{p['price']}\n  Weight: {p['weight']}\n  Description: {p['description']}"
-            for p in product_data
-        ])
-        
+        # Ask LLM for ONLY a friendly, 1-sentence conversational lead-in
         prompt = f"""
-Customer request: "{query}"
-
-Available Database Products:
-{items_summary}
+User query: "{query}"
+Found {len(product_data)} matching items from our store database.
 
 INSTRUCTIONS:
-1. ONLY present the exact products listed above.
-2. NEVER invent, hallucinate, or suggest any item not present in the Database Products list.
-3. List the items clearly with name, price, weight, and description.
+Generate a single, friendly sentence introducing these results (e.g., "Here are the dry fruit sweets under ₹450 available at our counter:" or "Here is what we have on our menu today:").
+DO NOT list the product names, prices, weights, or details. The visual product cards will display all the specifics.
 """
         chat_completion = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
-                {"role": "system", "content": "You are the counter assistant at Sweet Corner Sweets & Snacks. Present ONLY the provided store inventory accurately."},
+                {"role": "system", "content": "You are the friendly front counter assistant at Sweet Corner Sweets & Snacks. Keep introductory responses to exactly 1 concise sentence."},
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            max_tokens=60
         )
-        return chat_completion.choices[0].message.content
+        return chat_completion.choices[0].message.content.strip()
 
-    # Case 2: Greeting or fallback response
+    # Fallback for greetings or when 0 items match
     history = retrieve_history()
 
     system_prompt = """

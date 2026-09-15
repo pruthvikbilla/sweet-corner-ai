@@ -13,7 +13,7 @@ def search_products(
     cursor = conn.cursor(dictionary=True)
 
     query = """
-        SELECT p.product_name, c.category_name AS category, p.price, p.weight, p.stock, p.description, p.image_url
+        SELECT p.product_id, p.product_name, c.category_name AS category, p.price, p.weight, p.stock, p.description, p.image_url
         FROM products p
         JOIN categories c ON p.category_id = c.category_id
         WHERE 1=1
@@ -52,3 +52,18 @@ def search_products(
     cursor.close()
     conn.close()
     return items
+
+def get_product_by_id(product_id: int):
+    conn = connect_db()
+    cursor = conn.cursor(dictionary=True)
+    sql = """
+        SELECT p.product_id, p.product_name, c.category_name AS category, p.price, p.weight, p.stock, p.description, p.image_url
+        FROM products p
+        JOIN categories c ON p.category_id = c.category_id
+        WHERE p.product_id = %s
+    """
+    cursor.execute(sql, (product_id,))
+    item = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return item
