@@ -1,69 +1,55 @@
-from db import connect_db
+import re
+from bson import ObjectId
+from db import get_products_collection
+
+def serialize_doc(doc):
+    """Converts MongoDB BSON ObjectId to a plain string for JSON API responses"""
+    if not doc:
+        return None
+    doc["_id"] = str(doc["_id"])
+    return doc
 
 def search_products(
+    industry=None,
     category=None,
     keyword=None,
-    min_price=None,
-    max_price=None,
-    in_stock_only=True,
-    sort_by="name",
+    color=None,
     limit=15
 ):
-    conn = connect_db()
-    cursor = conn.cursor(dictionary=True)
+    col = get_products_collection()
+    query = {}
 
-    query = """
-        SELECT p.product_id, p.product_name, c.category_name AS category, p.price, p.weight, p.stock, p.description, p.image_url
-        FROM products p
-        JOIN categories c ON p.category_id = c.category_id
-        WHERE 1=1
-    """
-    params = []
+    # 1. Filter by Industry (Healthcare, Hospitality, Schools)
+    if industry:
+        query["industries"] = {"$regex": industry, "$options": "i"}
 
+    # 2. Filter by Category (Bedding, Uniforms, Gowns, Medical Equiptment & Supplies, etc.)
     if category:
-        query += " AND c.category_name = %s"
-        params.append(category)
+        query["category"] = {"$regex": category, "$options": "i"}
 
+    # 3. Filter by Keyword in Product Name or Description
     if keyword:
-        query += " AND (p.product_name LIKE %s OR p.description LIKE %s)"
-        params.extend([f"%{keyword}%", f"%{keyword}%"])
+        regex_pattern = re.compile(re.escape(keyword), re.IGNORECASE)
+        query["$or"] = [
+            {"product_name": {"$regex": regex_pattern}},
+            {"description": {"$regex": regex_pattern}}
+        ]
 
-    if min_price is not None:
-        query += " AND p.price >= %s"
-        params.append(min_price)
+    # 4. Filter by Color
+    if color:
+        query["colors"] = {"$regex": color, "$options": "i"}
 
-    if max_price is not None:
-        query += " AND p.price <= %s"
-        params.append(max_price)
-
-    if in_stock_only:
-        query += " AND p.stock > 0"
-
-    sort_mapping = {
-        "price_asc": "p.price ASC",
-        "price_desc": "p.price DESC",
-        "name": "p.product_name ASC"
-    }
-    query += f" ORDER BY {sort_mapping.get(sort_by, 'p.product_name ASC')} LIMIT %s"
-    params.append(limit)
-
-    cursor.execute(query, tuple(params))
-    items = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    cursor = col.find(query).limit(limit)
+    items = [serialize_doc(doc) for doc in cursor]
     return items
 
-def get_product_by_id(product_id: int):
-    conn = connect_db()
-    cursor = conn.cursor(dictionary=True)
-    sql = """
-        SELECT p.product_id, p.product_name, c.category_name AS category, p.price, p.weight, p.stock, p.description, p.image_url
-        FROM products p
-        JOIN categories c ON p.category_id = c.category_id
-        WHERE p.product_id = %s
-    """
-    cursor.execute(sql, (product_id,))
-    item = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return item
+def get_product_by_id(product_id: str):
+    col = get_products_collection()
+    try:
+        # Search by MongoDB ObjectId
+        doc = col.find_one({"_id": ObjectId(product_id)})
+        return serialize_doc(doc)
+    except Exception:
+        # Fallback search by product code string
+        doc = col.find_one({"product_code": product_id})
+        return serialize_doc(doc)

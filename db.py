@@ -1,9 +1,15 @@
-import mysql.connector
+import os
+from pymongo import MongoClient
+from dotenv import load_dotenv
 
-def connect_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="pruthvik@231",
-        database="sweet_corner_db"
-    )
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGODB_URI")
+client = MongoClient(MONGO_URI)
+
+# Database and collection
+db = client["b2b_supplies_db"]
+products_col = db["products"]
+
+def get_products_collection():
+    return products_col

@@ -6,7 +6,7 @@ from agent import process_query
 from memory import wipe_history
 from tools import get_product_by_id
 
-app = FastAPI(title="Sweet Corner API")
+app = FastAPI(title="B2B Institutional Supplies API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,14 +21,14 @@ class ChatPayload(BaseModel):
 
 @app.get("/")
 def health_check():
-    return {"status": "online", "store": "Sweet Corner Assistant API"}
+    return {"status": "online", "store": "B2B Medical & Hospitality Supplies API"}
 
 @app.post("/api/chat")
 def handle_chat(payload: ChatPayload):
     user_input = payload.message.strip()
     if not user_input:
         return {
-            "reply": "Please tell me what sweets or snacks you are looking for!",
+            "reply": "How can we assist your institution's textile or medical equipment needs today?",
             "products": []
         }
 
@@ -36,7 +36,7 @@ def handle_chat(payload: ChatPayload):
     return result
 
 @app.get("/api/products/{product_id}")
-def fetch_product(product_id: int):
+def fetch_product(product_id: str):
     product = get_product_by_id(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

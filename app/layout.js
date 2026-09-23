@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Sweet Corner Assistant",
-  description: "AI-Powered Sweet Shop Counter",
+  title: "Institutional Supplies Assistant",
+  description: "B2B Healthcare, Hospitality & School Sourcing Assistant",
 };
 
 export default function RootLayout({ children }) {

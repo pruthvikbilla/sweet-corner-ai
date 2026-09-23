@@ -1,7 +1,6 @@
 chat_log = []
-cached_results = []
 
-def record_chat(sender_role, text):
+def record_chat(sender_role: str, text: str):
     chat_log.append({"role": sender_role, "content": text})
     if len(chat_log) > 16:
         chat_log.pop(0)
@@ -11,4 +10,3 @@ def retrieve_history():
 
 def wipe_history():
     chat_log.clear()
-    cached_results.clear()
